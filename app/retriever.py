@@ -17,11 +17,11 @@ def index_chunks(chunks: list[str]):
         tfidf_matrix = None
         return
 
-    vectorizer = TfidfVectorizer()
+    vectorizer = TfidfVectorizer(stop_words="english")
     tfidf_matrix = vectorizer.fit_transform(chunks)
 
 
-def search_chunks(question: str, top_k: int = 3):
+def search_chunks(question: str, top_k: int = 3, min_score: float = 0.01):
     if vectorizer is None or tfidf_matrix is None:
         return []
 
@@ -35,7 +35,7 @@ def search_chunks(question: str, top_k: int = 3):
     for index in top_indexes:
         score = float(similarities[index])
 
-        if score > 0:
+        if score >= min_score:
             results.append({
                 "chunk": stored_chunks[index],
                 "score": score

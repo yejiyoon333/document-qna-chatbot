@@ -4,7 +4,9 @@ from pydantic import BaseModel
 from app.pdf_loader import extract_text_from_pdf
 from app.text_chunk import chunk_text
 from app.retriever import index_chunks, search_chunks, get_index_status, get_all_chunks
-from app.qa_service import generate_answer
+from app.qa_service import build_sources
+from app.llm_service import generate_llm_answer
+
 
 app = FastAPI()
 
@@ -16,6 +18,11 @@ class QuestionRequest(BaseModel):
 @app.get("/")
 def root():
     return {"message": "Document Q&A Chatbot API is running"}
+
+
+@app.get("/status")
+def status():
+    return get_index_status()
 
 
 @app.post("/upload")
@@ -38,16 +45,13 @@ async def upload_pdf(file: UploadFile = File(...)):
 
 @app.post("/ask")
 def ask_question(request: QuestionRequest):
-    results = search_chunks(request.question)
-    response = generate_answer(request.question, results, get_all_chunks())
+    retrieved_chunks = search_chunks(request.question)
+    sources = build_sources(retrieved_chunks, get_all_chunks())
+    answer = generate_llm_answer(request.question, sources)
 
     return {
         "question": request.question,
-        "answer": response["answer"],
-        "sources": response["sources"],
-        "message": "Answer generated from retrieved document chunks"
+        "answer": answer,
+        "sources": sources,
+        "message": "Answer generated with Gemini API"
     }
-
-@app.get("/status")
-def status():
-    return get_index_status()
