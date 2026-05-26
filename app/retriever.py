@@ -33,12 +33,19 @@ def search_chunks(question: str, top_k: int = 3):
     results = []
 
     for index in top_indexes:
-        results.append({
-            "chunk": stored_chunks[index],
-            "score": float(similarities[index])
-        })
+        score = float(similarities[index])
+
+        if score > 0:
+            results.append({
+                "chunk": stored_chunks[index],
+                "score": score
+            })
 
     return results
+
+
+def get_all_chunks():
+    return stored_chunks
 
 
 def get_index_status():
