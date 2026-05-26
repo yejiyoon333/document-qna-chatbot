@@ -11,6 +11,12 @@ def index_chunks(chunks: list[str]):
     global stored_chunks, vectorizer, tfidf_matrix
 
     stored_chunks = chunks
+
+    if not chunks:
+        vectorizer = None
+        tfidf_matrix = None
+        return
+
     vectorizer = TfidfVectorizer()
     tfidf_matrix = vectorizer.fit_transform(chunks)
 
@@ -33,3 +39,10 @@ def search_chunks(question: str, top_k: int = 3):
         })
 
     return results
+
+
+def get_index_status():
+    return {
+        "indexed_chunk_count": len(stored_chunks),
+        "is_index_ready": vectorizer is not None and tfidf_matrix is not None
+    }

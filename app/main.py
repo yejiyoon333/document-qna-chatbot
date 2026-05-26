@@ -3,8 +3,8 @@ from pydantic import BaseModel
 
 from app.pdf_loader import extract_text_from_pdf
 from app.text_chunk import chunk_text
-from app.retriever import index_chunks, search_chunks
-
+from app.retriever import index_chunks, search_chunks, get_index_status
+from app.qa_service import generate_answer
 
 app = FastAPI()
 
@@ -39,9 +39,15 @@ async def upload_pdf(file: UploadFile = File(...)):
 @app.post("/ask")
 def ask_question(request: QuestionRequest):
     results = search_chunks(request.question)
+    response = generate_answer(request.question, results)
 
     return {
         "question": request.question,
-        "results": results,
-        "message": "Relevant chunks retrieved successfully"
+        "answer": response["answer"],
+        "sources": response["sources"],
+        "message": "Answer generated from retrieved document chunks"
     }
+
+@app.get("/status")
+def status():
+    return get_index_status()
