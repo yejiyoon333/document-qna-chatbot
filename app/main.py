@@ -4,7 +4,7 @@ from pydantic import BaseModel
 from app.pdf_loader import extract_text_from_pdf
 from app.text_chunk import chunk_text
 from app.retriever import index_chunks, search_chunks, get_index_status, get_all_chunks
-from app.qa_service import build_sources
+from app.qa_service import build_context_sources, build_display_sources
 from app.llm_service import generate_llm_answer
 
 
@@ -46,12 +46,14 @@ async def upload_pdf(file: UploadFile = File(...)):
 @app.post("/ask")
 def ask_question(request: QuestionRequest):
     retrieved_chunks = search_chunks(request.question)
-    sources = build_sources(retrieved_chunks, get_all_chunks())
-    answer = generate_llm_answer(request.question, sources)
+    context_sources = build_context_sources(retrieved_chunks, get_all_chunks())
+    display_sources = build_display_sources(context_sources)
+
+    answer = generate_llm_answer(request.question, context_sources)
 
     return {
         "question": request.question,
         "answer": answer,
-        "sources": sources,
+        "sources": display_sources,
         "message": "Answer generated with Gemini API"
     }
