@@ -31,7 +31,7 @@ async def upload_pdf(file: UploadFile = File(...)):
     extracted_text = extract_text_from_pdf(file_bytes)
 
     chunks = chunk_text(extracted_text)
-    index_chunks(chunks)
+    index_chunks(chunks, file.filename)
 
     return {
         "filename": file.filename,

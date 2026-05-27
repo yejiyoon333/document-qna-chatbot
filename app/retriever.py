@@ -3,14 +3,16 @@ from sklearn.metrics.pairwise import cosine_similarity
 
 
 stored_chunks = []
+current_document_name = None
 vectorizer = None
 tfidf_matrix = None
 
 
-def index_chunks(chunks: list[str]):
-    global stored_chunks, vectorizer, tfidf_matrix
+def index_chunks(chunks: list[str], document_name: str):
+    global stored_chunks, current_document_name, vectorizer, tfidf_matrix
 
     stored_chunks = chunks
+    current_document_name = document_name
 
     if not chunks:
         vectorizer = None
@@ -50,6 +52,7 @@ def get_all_chunks():
 
 def get_index_status():
     return {
+        "document_name": current_document_name,
         "indexed_chunk_count": len(stored_chunks),
         "is_index_ready": vectorizer is not None and tfidf_matrix is not None
     }
