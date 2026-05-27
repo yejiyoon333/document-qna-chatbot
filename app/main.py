@@ -1,4 +1,4 @@
-from fastapi import FastAPI, UploadFile, File
+from fastapi import FastAPI, UploadFile, File, HTTPException
 from pydantic import BaseModel
 
 from app.document_loader import extract_text_from_file
@@ -7,6 +7,8 @@ from app.retriever import index_chunks, search_chunks, get_index_status, get_all
 from app.qa_service import build_context_sources, build_display_sources
 from app.llm_service import generate_llm_answer
 
+# http://127.0.0.1:8000
+# http://localhost:5173
 
 app = FastAPI()
 
@@ -62,6 +64,14 @@ async def upload_document(file: UploadFile = File(...)):
 
 @app.post("/ask")
 def ask_question(request: QuestionRequest):
+    status = get_index_status()
+
+    if not status["is_index_ready"]:
+        raise HTTPException(
+            status_code=400,
+            detail="Please upload a document before asking questions."
+        )
+
     retrieved_chunks = search_chunks(request.question)
     context_sources = build_context_sources(retrieved_chunks, get_all_chunks())
     display_sources = build_display_sources(context_sources)
