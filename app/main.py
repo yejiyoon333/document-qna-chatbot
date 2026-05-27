@@ -7,8 +7,8 @@ from app.retriever import index_chunks, search_chunks, get_index_status, get_all
 from app.qa_service import build_context_sources, build_display_sources
 from app.llm_service import generate_llm_answer
 
-# http://127.0.0.1:8000
-# http://localhost:5173
+# backend http://127.0.0.1:8000
+# browser http://localhost:5173
 
 app = FastAPI()
 
