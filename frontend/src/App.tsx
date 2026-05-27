@@ -12,8 +12,11 @@ function App() {
   const [uploadResult, setUploadResult] = useState<UploadResponse | null>(null);
   const [question, setQuestion] = useState("");
   const [answerResult, setAnswerResult] = useState<AskResponse | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const [isAsking, setIsAsking] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+
+  const isDocumentReady = uploadResult !== null;
 
   async function handleUpload() {
     if (!selectedFile) {
@@ -22,7 +25,7 @@ function App() {
     }
 
     try {
-      setLoading(true);
+      setIsUploading(true);
       setErrorMessage("");
       setAnswerResult(null);
 
@@ -35,18 +38,23 @@ function App() {
         setErrorMessage("Upload failed.");
       }
     } finally {
-      setLoading(false);
+      setIsUploading(false);
     }
   }
 
   async function handleAsk() {
+    if (!isDocumentReady) {
+      setErrorMessage("Please upload a document before asking questions.");
+      return;
+    }
+
     if (!question.trim()) {
       setErrorMessage("Please enter a question.");
       return;
     }
 
     try {
-      setLoading(true);
+      setIsAsking(true);
       setErrorMessage("");
 
       const result = await askQuestion(question);
@@ -58,7 +66,7 @@ function App() {
         setErrorMessage("Failed to get an answer.");
       }
     } finally {
-      setLoading(false);
+      setIsAsking(false);
     }
   }
 
@@ -83,16 +91,24 @@ function App() {
             onChange={(event) => {
               const file = event.target.files?.[0] ?? null;
               setSelectedFile(file);
+              setUploadResult(null);
+              setAnswerResult(null);
+              setErrorMessage("");
             }}
           />
 
-          <button onClick={handleUpload} disabled={loading}>
-            Upload
+          <button onClick={handleUpload} disabled={!selectedFile || isUploading}>
+            {isUploading ? "Uploading..." : "Upload"}
           </button>
         </div>
 
+        {selectedFile && !uploadResult && (
+          <p className="file-hint">Selected: {selectedFile.name}</p>
+        )}
+
         {uploadResult && (
           <div className="result-box">
+            <p className="success-text">Document is ready.</p>
             <p>
               <strong>File:</strong> {uploadResult.filename}
             </p>
@@ -116,9 +132,13 @@ function App() {
           rows={4}
         />
 
-        <button onClick={handleAsk} disabled={loading}>
-          Ask
+        <button onClick={handleAsk} disabled={!isDocumentReady || isAsking}>
+          {isAsking ? "Generating answer..." : "Ask"}
         </button>
+
+        {!isDocumentReady && (
+          <p className="file-hint">Upload a document before asking questions.</p>
+        )}
 
         {answerResult && (
           <div className="answer-box">
@@ -137,8 +157,6 @@ function App() {
           </div>
         )}
       </section>
-
-      {loading && <p className="loading">Processing...</p>}
 
       {errorMessage && <p className="error">{errorMessage}</p>}
     </main>
