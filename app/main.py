@@ -1,4 +1,5 @@
 from fastapi import FastAPI, UploadFile, File, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
 from app.document_loader import extract_text_from_file
@@ -7,11 +8,21 @@ from app.retriever import index_chunks, search_chunks, get_index_status, get_all
 from app.qa_service import build_context_sources, build_display_sources
 from app.llm_service import generate_llm_answer
 
-# backend http://127.0.0.1:8000
-# browser http://localhost:5173
+# FastAPI backend http://127.0.0.1:8000
+# React frontend http://localhost:5173
 
 app = FastAPI()
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 class QuestionRequest(BaseModel):
     question: str
